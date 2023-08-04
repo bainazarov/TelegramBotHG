@@ -18,6 +18,10 @@ public class HangmanGame {
         return isGameStarted;
     }
 
+    private void revealedWord() {
+        revealedWord = new StringBuilder(secretWord);
+    }
+
     public void startGame(Message message) {
         if(!isGameStarted) {
             secretWord = chooseRandomWord();
@@ -36,7 +40,19 @@ public class HangmanGame {
     public void makeGuess(Message message) {
         if (isGameStarted) {
             String guess = message.text().toLowerCase();
-            if (guess.matches("[а-яА-ЯёЁ]")) {
+            if (guess.length() > 1) {
+                if (guess.equalsIgnoreCase(secretWord)) {
+                    revealedWord();
+
+                    SendMessage msg = new SendMessage(message.chat().id(),
+                            "Поздравляю, вы правильно угадали слово: " + secretWord);
+                    msg.replyToMessageId(message.messageId());
+                    bot.execute(msg);
+                    endGame();
+                } else {
+                    handleWrongWord(message);
+                }
+            } else if (guess.matches("[а-яА-ЯёЁ]")) {
                 char letter = guess.charAt(0);
                 if (secretWord.toLowerCase().contains(String.valueOf(letter))) {
                     boolean hasGuessed = false;
@@ -82,9 +98,13 @@ public class HangmanGame {
     }
 
     public void checkIfWordRevealed(long chatId) {
-        if(!revealedWord.toString().contains("*")) {
-            SendMessage msg = new SendMessage(chatId, "Вы угадали все буквы. Поздравляю вы победили!");
+        if (!revealedWord.toString().contains("*")) {
+            StringBuilder messageText = new StringBuilder("Вы угадали все буквы. Поздравляю, вы победили!");
+
+
+            SendMessage msg = new SendMessage(chatId, messageText.toString());
             bot.execute(msg);
+            revealedWord();
             endGame();
         }
     }
@@ -93,4 +113,11 @@ public class HangmanGame {
         WordProvider wordProvider = new WordProvider();
         return wordProvider.chooseRandomWord();
     }
+
+    private void handleWrongWord(Message message) {
+        SendMessage msg = new SendMessage(message.chat().id(), "Увы, вы неправильно угадали слово.");
+        msg.replyToMessageId(message.messageId());
+        bot.execute(msg);
+    }
+
 }
