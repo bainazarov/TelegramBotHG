@@ -52,12 +52,6 @@ public class GameStatistics {
         private int guessedWords;
         private int unguessedWords;
 
-        public PlayerStatistics() {
-            guessedLetters = 0;
-            unguessedLetters = 0;
-            guessedWords = 0;
-            unguessedWords = 0;
-        }
 
         public int getGuessedLetters() {
             return guessedLetters;
