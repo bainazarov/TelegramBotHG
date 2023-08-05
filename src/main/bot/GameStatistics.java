@@ -15,6 +15,7 @@ public class GameStatistics {
         } else {
             playerStatistics.incrementUnguessedLetters();
         }
+        playerStatisticsMap.put(playerName, playerStatistics);
     }
     public void updatePlayerStatisticsWords(String playerName, boolean guessedWord, boolean unGuessedWords) {
         PlayerStatistics playerStatistics = playerStatisticsMap.getOrDefault(playerName, new PlayerStatistics());
@@ -105,6 +106,8 @@ public class GameStatistics {
     }
 
     public void addPlayer(String playerName) {
-        playerStatisticsMap.put(playerName, new PlayerStatistics());
+        if (!playerStatisticsMap.containsKey(playerName)) {
+            playerStatisticsMap.put(playerName, new PlayerStatistics());
+        }
     }
 }

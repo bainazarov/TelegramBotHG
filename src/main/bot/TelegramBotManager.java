@@ -9,7 +9,7 @@ import java.util.HashMap;
 
 public class TelegramBotManager implements BotConstants {
     private TelegramBot bot;
-    private static HashMap<Long, HangmanGame> activeGames;
+    static HashMap<Long, HangmanGame> activeGames;
 
     public TelegramBotManager() {
         bot = new TelegramBot(BOT_TOKEN);

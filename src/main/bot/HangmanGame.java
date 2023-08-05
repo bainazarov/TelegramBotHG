@@ -2,7 +2,8 @@ import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.request.SendMessage;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class HangmanGame {
@@ -108,9 +109,28 @@ public class HangmanGame {
         revealedWord = null;
         isGameStarted = false;
 
-        SendMessage statisticsMsg = new SendMessage(currentMessage.chat().id(), "Поздравляю, вы угадали слово: " + secretWord + "\n" + gameStatistics.getStatisticsMessage());
+        StringBuilder messageText = new StringBuilder("Игра завершена.\n\n");
+
+        List<String> alreadyDisplayedPlayers = new ArrayList<>();
+
+        for (HangmanGame game : TelegramBotManager.activeGames.values()) {
+            String playerName = game.getCurrentMessage().from().firstName();
+
+            if (!alreadyDisplayedPlayers.contains(playerName)) {
+                messageText.append(game.getGameStatistics().getStatisticsMessage());
+                messageText.append("\n");
+
+                alreadyDisplayedPlayers.add(playerName);
+            }
+        }
+
+        SendMessage statisticsMsg = new SendMessage(currentMessage.chat().id(), messageText.toString());
         statisticsMsg.replyToMessageId(currentMessage.messageId());
-            bot.execute(statisticsMsg);
+        bot.execute(statisticsMsg);
+    }
+
+    private Message getCurrentMessage() {
+        return currentMessage;
     }
 
 
@@ -138,4 +158,7 @@ public class HangmanGame {
         bot.execute(msg);
     }
 
+    public GameStatistics getGameStatistics() {
+        return gameStatistics;
+    }
 }
