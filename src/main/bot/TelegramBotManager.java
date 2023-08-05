@@ -30,9 +30,9 @@ public class TelegramBotManager implements BotConstants {
         }
     private void onUpdate(Update update) {
         Message message = update.message();
-        long chatId = message.chat().id();
 
         if (message != null && message.text()!=null) {
+            long chatId = message.chat().id();
             String text = message.text();
             if (text.equals("/hangman")) {
                 HangmanGame game = activeGames.get(chatId);
