@@ -2,16 +2,22 @@ import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.request.SendMessage;
 
+import java.util.*;
+
+
 public class HangmanGame {
 
     private boolean isGameStarted;
     private String secretWord;
     private StringBuilder revealedWord;
     private TelegramBot bot;
+    private GameStatistics gameStatistics;
+    private Message currentMessage;
 
     public HangmanGame(TelegramBot bot) {
         this.bot = bot;
         isGameStarted = false;
+        this.gameStatistics = new GameStatistics();
     }
 
     public boolean isGameStarted() {
@@ -23,6 +29,7 @@ public class HangmanGame {
     }
 
     public void startGame(Message message) {
+        this.currentMessage = message;
         if(!isGameStarted) {
             secretWord = chooseRandomWord();
             revealedWord = new StringBuilder(secretWord.replaceAll(".", "*"));
@@ -34,6 +41,8 @@ public class HangmanGame {
             bot.execute(startMsg);
             bot.execute(revealMsg);
             isGameStarted = true;
+            gameStatistics.resetStatistics();
+            gameStatistics.addPlayer(message.from().firstName());
         }
     }
 
@@ -47,6 +56,7 @@ public class HangmanGame {
                     SendMessage msg = new SendMessage(message.chat().id(),
                             "Поздравляю, вы правильно угадали слово: " + secretWord);
                     msg.replyToMessageId(message.messageId());
+                    gameStatistics.updatePlayerStatisticsWords(message.from().firstName(), true, false);
                     bot.execute(msg);
                     endGame();
                 } else {
@@ -66,12 +76,14 @@ public class HangmanGame {
                         SendMessage msg = new SendMessage(message.chat().id(),
                                 "Вы угадали, такая буква есть в слове:\n" + revealedWord.toString());
                         msg.replyToMessageId(message.messageId());
+                        gameStatistics.updatePlayerStatisticsLetters(message.from().firstName(), true, false);
                         bot.execute(msg);
                         checkIfWordRevealed(message.chat().id());
                     }
                 } else {
                     SendMessage msg = new SendMessage(message.chat().id(), "Увы, такой буквы нет");
                     msg.replyToMessageId(message.messageId());
+                    gameStatistics.updatePlayerStatisticsLetters(message.from().firstName(), false, true);
                     bot.execute(msg);
                 }
             } else {
@@ -95,7 +107,12 @@ public class HangmanGame {
         secretWord = "";
         revealedWord = null;
         isGameStarted = false;
+
+        SendMessage statisticsMsg = new SendMessage(currentMessage.chat().id(), "Поздравляю, вы угадали слово: " + secretWord + "\n" + gameStatistics.getStatisticsMessage());
+        statisticsMsg.replyToMessageId(currentMessage.messageId());
+            bot.execute(statisticsMsg);
     }
+
 
     public void checkIfWordRevealed(long chatId) {
         if (!revealedWord.toString().contains("*")) {
@@ -117,6 +134,7 @@ public class HangmanGame {
     private void handleWrongWord(Message message) {
         SendMessage msg = new SendMessage(message.chat().id(), "Увы, вы неправильно угадали слово.");
         msg.replyToMessageId(message.messageId());
+        gameStatistics.updatePlayerStatisticsWords(message.from().firstName(), false, true);
         bot.execute(msg);
     }
 

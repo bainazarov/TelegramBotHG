@@ -32,7 +32,7 @@ public class TelegramBotManager implements BotConstants {
         Message message = update.message();
         long chatId = message.chat().id();
 
-        if (message != null) {
+        if (message != null && message.text()!=null) {
             String text = message.text();
             if (text.equals("/hangman")) {
                 HangmanGame game = activeGames.get(chatId);
