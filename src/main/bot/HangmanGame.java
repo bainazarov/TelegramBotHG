@@ -48,50 +48,59 @@ public class HangmanGame {
     }
 
     public void makeGuess(Message message) {
-        if (isGameStarted) {
-            String guess = message.text().toLowerCase();
-            if (guess.length() > 1) {
-                if (guess.equalsIgnoreCase(secretWord)) {
-                    revealedWord();
+        if (!isGameStarted) {
+            return;
+        }
 
-                    SendMessage msg = new SendMessage(message.chat().id(),
-                            "Поздравляю, вы правильно угадали слово: " + secretWord);
-                    msg.replyToMessageId(message.messageId());
-                    gameStatistics.updatePlayerStatisticsWords(message.from().firstName(), true, false);
-                    bot.execute(msg);
-                    endGame();
-                } else {
-                    handleWrongWord(message);
+        String guess = message.text().toLowerCase();
+
+        if (guess.length() > 1) {
+            handleWordGuess(message, guess);
+        } else if (guess.matches("[а-яА-ЯёЁ]")) {
+            handleLetterGuess(message, guess.charAt(0));
+        } else {
+            SendMessage msg = new SendMessage(message.chat().id(), "Пожалуйста, введите только одну букву");
+            msg.replyToMessageId(message.messageId());
+            bot.execute(msg);
+        }
+    }
+
+    private void handleWordGuess(Message message, String guess) {
+        if (guess.equalsIgnoreCase(secretWord)) {
+            revealedWord();
+            SendMessage msg = new SendMessage(message.chat().id(),
+                    "Поздравляю, вы правильно угадали слово: " + secretWord);
+            msg.replyToMessageId(message.messageId());
+            gameStatistics.updatePlayerStatisticsWords(message.from().firstName(), true, false);
+            bot.execute(msg);
+            endGame();
+        } else {
+            handleWrongWord(message);
+        }
+    }
+
+    private void handleLetterGuess(Message message, char letter) {
+        if (secretWord.toLowerCase().contains(String.valueOf(letter))) {
+            boolean hasGuessed = false;
+            for (int i = 0; i < secretWord.length(); i++) {
+                if (Character.toLowerCase(secretWord.charAt(i)) == letter && revealedWord.charAt(i) == '*') {
+                    revealedWord.setCharAt(i, secretWord.charAt(i));
+                    hasGuessed = true;
                 }
-            } else if (guess.matches("[а-яА-ЯёЁ]")) {
-                char letter = guess.charAt(0);
-                if (secretWord.toLowerCase().contains(String.valueOf(letter))) {
-                    boolean hasGuessed = false;
-                    for (int i = 0; i < secretWord.length(); i++) {
-                        if (Character.toLowerCase(secretWord.charAt(i)) == letter && revealedWord.charAt(i) == '*') {
-                            revealedWord.setCharAt(i, secretWord.charAt(i));
-                            hasGuessed = true;
-                        }
-                    }
-                    if (hasGuessed) {
-                        SendMessage msg = new SendMessage(message.chat().id(),
-                                "Вы угадали, такая буква есть в слове:\n" + revealedWord.toString());
-                        msg.replyToMessageId(message.messageId());
-                        gameStatistics.updatePlayerStatisticsLetters(message.from().firstName(), true, false);
-                        bot.execute(msg);
-                        checkIfWordRevealed(message.chat().id());
-                    }
-                } else {
-                    SendMessage msg = new SendMessage(message.chat().id(), "Увы, такой буквы нет");
-                    msg.replyToMessageId(message.messageId());
-                    gameStatistics.updatePlayerStatisticsLetters(message.from().firstName(), false, true);
-                    bot.execute(msg);
-                }
-            } else {
-                SendMessage msg = new SendMessage(message.chat().id(), "Пожалуйста, введите только одну букву");
-                msg.replyToMessageId(message.messageId());
-                bot.execute(msg);
             }
+            if (hasGuessed) {
+                SendMessage msg = new SendMessage(message.chat().id(),
+                        "Вы угадали, такая буква есть в слове:\n" + revealedWord.toString());
+                msg.replyToMessageId(message.messageId());
+                gameStatistics.updatePlayerStatisticsLetters(message.from().firstName(), true, false);
+                bot.execute(msg);
+                checkIfWordRevealed(message.chat().id());
+            }
+        } else {
+            SendMessage msg = new SendMessage(message.chat().id(), "Увы, такой буквы нет");
+            msg.replyToMessageId(message.messageId());
+            gameStatistics.updatePlayerStatisticsLetters(message.from().firstName(), false, true);
+            bot.execute(msg);
         }
     }
 
