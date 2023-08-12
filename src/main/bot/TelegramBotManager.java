@@ -20,14 +20,14 @@ public class TelegramBotManager implements BotConstants {
         TelegramBotManager botManager = new TelegramBotManager();
         botManager.startBot();
     }
-        public void startBot () {
-            bot.setUpdatesListener(updates -> {
-                for (Update update : updates) {
-                    onUpdate(update);
-                }
-                return UpdatesListener.CONFIRMED_UPDATES_ALL;
-            });
-        }
+    public void startBot () {
+        bot.setUpdatesListener(updates -> {
+            for (Update update : updates) {
+                onUpdate(update);
+            }
+            return UpdatesListener.CONFIRMED_UPDATES_ALL;
+        });
+    }
     private void onUpdate(Update update) {
         Message message = update.message();
 
@@ -51,18 +51,8 @@ public class TelegramBotManager implements BotConstants {
                 HangmanGame game = activeGames.get(chatId);
                 if (game != null) {
                     game.makeGuess(message);
-                } else {
-                    sendInstructions(chatId);
                 }
             }
         }
-    }
-
-    private void sendInstructions (long chatId) {
-        SendMessage instructions = new SendMessage(chatId,
-                "Добро пожаловать в игру 'Виселица'!\n\n" +
-                "Чтобы начать игру, отправьте команду /hangman\n" +
-                "Чтобы прекратить игру, отправьте команду /hangmanstop.");
-        bot.execute(instructions);
     }
 }
