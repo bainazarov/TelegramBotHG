@@ -18,7 +18,8 @@ public class HangmanGame {
     public HangmanGame(TelegramBot bot) {
         this.bot = bot;
         isGameStarted = false;
-        this.gameStatistics = new GameStatistics();
+        PlayerStatisticsDao playerStatisticsDao = new PlayerStatisticsDaoImpl();
+        this.gameStatistics = new GameStatistics(playerStatisticsDao);
     }
 
     public boolean isGameStarted() {

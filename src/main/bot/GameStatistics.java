@@ -1,107 +1,81 @@
-import java.util.HashMap;
-import java.util.Map;
+
+import java.util.List;
 
 public class GameStatistics {
-    private Map<String, PlayerStatistics> playerStatisticsMap;
+    private PlayerStatisticsDao playerStatisticsDao;
 
-    public GameStatistics() {
-        playerStatisticsMap = new HashMap<>();
+    private List<PlayerStatisticsEntity> getAllPlayerStatistics() {
+        return playerStatisticsDao.getAllPlayerStatistics();
+    }
+
+    private void updatePlayerStatistics(PlayerStatisticsEntity playerStatistics) {
+        playerStatisticsDao.updatePlayerStatistics(playerStatistics);
+    }
+
+    private PlayerStatisticsEntity getPlayerStatistics(String playerName) {
+        return playerStatisticsDao.getPlayerStatistics(playerName);
+    }
+
+    private void savePlayerStatistics(PlayerStatisticsEntity playerStatistics) {
+        playerStatisticsDao.savePlayerStatistics(playerStatistics);
+    }
+
+    public GameStatistics(PlayerStatisticsDao playerStatisticsDao) {
+        this.playerStatisticsDao = playerStatisticsDao;
     }
 
     public void updatePlayerStatisticsLetters(String playerName, boolean guessedLetter, boolean unGuessedLetter) {
-        PlayerStatistics playerStatistics = playerStatisticsMap.getOrDefault(playerName, new PlayerStatistics());
+        PlayerStatisticsEntity playerStatistics = getPlayerStatistics(playerName);
+        if (playerStatistics == null) {
+            playerStatistics = new PlayerStatisticsEntity();
+            playerStatistics.setPlayerName(playerName);
+        }
         if (guessedLetter) {
             playerStatistics.incrementGuessedLetters();
         } else {
             playerStatistics.incrementUnguessedLetters();
         }
-        playerStatisticsMap.put(playerName, playerStatistics);
+        updatePlayerStatistics(playerStatistics);
     }
-    public void updatePlayerStatisticsWords(String playerName, boolean guessedWord, boolean unGuessedWords) {
-        PlayerStatistics playerStatistics = playerStatisticsMap.getOrDefault(playerName, new PlayerStatistics());
+
+    public void updatePlayerStatisticsWords(String playerName, boolean guessedWord, boolean unGuessedWord) {
+        PlayerStatisticsEntity playerStatistics = getPlayerStatistics(playerName);
+        if (playerStatistics == null) {
+            playerStatistics = new PlayerStatisticsEntity();
+            playerStatistics.setPlayerName(playerName);
+        }
         if (guessedWord) {
             playerStatistics.incrementGuessedWords();
         } else {
             playerStatistics.incrementUnguessedWords();
         }
-        playerStatisticsMap.put(playerName, playerStatistics);
+        updatePlayerStatistics(playerStatistics);
     }
 
     public String getStatisticsMessage() {
         StringBuilder statisticsMessage = new StringBuilder();
 
-        for (Map.Entry<String, PlayerStatistics> entry : playerStatisticsMap.entrySet()) {
-            String playerName = entry.getKey();
-            PlayerStatistics playerStatistics = entry.getValue();
+        List<PlayerStatisticsEntity> playerStatisticsList = getAllPlayerStatistics();
 
-            statisticsMessage.append("Имя игрока: ").append(playerName).append("\n");
+        for (PlayerStatisticsEntity playerStatistics : playerStatisticsList) {
+            statisticsMessage.append("Имя игрока: ").append(playerStatistics.getPlayerName()).append("\n");
             statisticsMessage.append("- Количество угаданных букв: ").append(playerStatistics.getGuessedLetters()).append("\n");
             statisticsMessage.append("- Количество неугаданных букв: ").append(playerStatistics.getUnguessedLetters()).append("\n");
             statisticsMessage.append("- Количество угаданных слов: ").append(playerStatistics.getGuessedWords()).append("\n");
             statisticsMessage.append("- Количество неугаданных слов: ").append(playerStatistics.getUnguessedWords()).append("\n");
-            statisticsMessage.append("- Процент успешных попыток: ")
-                    .append(playerStatistics.getSuccessRatio()).append("%\n\n");
+            statisticsMessage.append("- Процент успешных попыток: ").append(playerStatistics.getSuccessRatio()).append("%\n\n");
         }
 
         return statisticsMessage.toString();
     }
 
-    public class PlayerStatistics {
-        private int guessedLetters;
-        private int unguessedLetters;
-        private int guessedWords;
-        private int unguessedWords;
-
-
-        public int getGuessedLetters() {
-            return guessedLetters;
-        }
-
-        public int getUnguessedLetters() {
-            return unguessedLetters;
-        }
-
-        public int getGuessedWords() {
-            return guessedWords;
-        }
-
-        public int getUnguessedWords() {
-            return unguessedWords;
-        }
-
-        public double getSuccessRatio() {
-            int totalAttempts = guessedLetters + unguessedLetters + guessedWords + unguessedWords;
-            if (totalAttempts != 0) {
-                return (double) (guessedLetters + guessedWords) / totalAttempts * 100;
-            } else {
-                return 0;
-            }
-        }
-
-        public void incrementGuessedLetters() {
-            guessedLetters++;
-        }
-
-        public void incrementUnguessedLetters() {
-            unguessedLetters++;
-        }
-
-        public void incrementGuessedWords() {
-            guessedWords++;
-        }
-
-        public void incrementUnguessedWords() {
-            unguessedWords++;
-        }
-    }
-
     public void resetStatistics() {
-        playerStatisticsMap.clear();
+        playerStatisticsDao.resetPlayersStatistics();
     }
 
     public void addPlayer(String playerName) {
-        if (!playerStatisticsMap.containsKey(playerName)) {
-            playerStatisticsMap.put(playerName, new PlayerStatistics());
-        }
+        PlayerStatisticsEntity playerStatistics = new PlayerStatisticsEntity();
+        playerStatistics.setPlayerName(playerName);
+        savePlayerStatistics(playerStatistics);
     }
 }
